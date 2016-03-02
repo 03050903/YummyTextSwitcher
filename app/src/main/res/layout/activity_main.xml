@@ -3,14 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:ufreedom="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true"
     tools:context="me.ufreedom.yummytextswitcher.MainActivity">
 
 
-    <me.ufreedom.yummytextswitcher.YummyTextSwitcher
+    <com.ufreedom.YummyTextSwitcher
         android:id="@+id/yummyTextSwitcher"
         android:layout_width="120dp"
-        android:layout_height="90dp"
+        android:layout_height="60dp"
+        ufreedom:frameOffset="180"
+        ufreedom:textSize="60dp"
         android:background="@android:color/holo_red_dark"
         android:layout_centerInParent="true"/>
     

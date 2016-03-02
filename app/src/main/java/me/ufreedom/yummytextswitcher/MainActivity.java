@@ -6,6 +6,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.ufreedom.YummyTextSwitcher;
+
 public class MainActivity extends AppCompatActivity {
 
     YummyTextSwitcher yummyTextSwitcher;
@@ -17,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
      /*   Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);*/
         
-        yummyTextSwitcher= (YummyTextSwitcher) findViewById(R.id.yummyTextSwitcher);
+       yummyTextSwitcher= (YummyTextSwitcher) findViewById(R.id.yummyTextSwitcher);
 
 
     }

@@ -1,8 +1,9 @@
-package me.ufreedom.yummytextswitcher;
+package com.ufreedom;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -33,7 +34,6 @@ public class YummyTextSwitcher extends View {
 
     private int mViewHeight;
     private int mViewWidth;
-    private boolean isInit = false;
 
     private BlurMaskFilter mMaskFilterFirst;
     private BlurMaskFilter mMaskFilterSecond;
@@ -42,28 +42,33 @@ public class YummyTextSwitcher extends View {
 
     private Paint testPaint;
 
-    private Paint mNormalPaint;
     private Paint mMiddleFramePaint;
     private Paint mFirstFramePaint;
     private Paint mSecondFramePaint;
     private Rect drawRect = new Rect();
-    
+
     private float mFrameOffset;
 
     public YummyTextSwitcher(Context context) {
-        super(context);
-        init();
+        this(context, null);
     }
 
     public YummyTextSwitcher(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-
+        this(context, attrs, 0);
     }
 
-    public static int sp2px(Context context, float spValue) {
-        final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
-        return (int) (spValue * fontScale + 0.5f);
+    public YummyTextSwitcher(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+
+        TypedArray arr = context.obtainStyledAttributes(attrs, R.styleable.YummyTextSwitcher, 0, 0);
+        mTextSize = arr.getDimensionPixelSize(R.styleable.YummyTextSwitcher_textSize, 80);
+        
+        if (arr.hasValue(R.styleable.YummyTextSwitcher_frameOffset)){
+            mFrameOffset = arr.getFloat(R.styleable.YummyTextSwitcher_frameOffset, -1.0f);
+        }
+        arr.recycle();
+        init();
+
     }
 
     private void init() {
@@ -76,23 +81,15 @@ public class YummyTextSwitcher extends View {
 
 
         mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mFrameInterpolator = new DefaultFrameInterpolator();
-        mTextSize = 80;
+        mFrameInterpolator = new NumberFrameInterpolator();
+
+        //      mTextSize = 80;
         mTextPaint.setTextSize(mTextSize);
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(mTextSize);
         mTextPaint.setColor(Color.BLACK);
         mTextPaint.setStyle(Paint.Style.FILL);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
-
-        mNormalPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mNormalPaint.setTextSize(mTextSize);
-        mNormalPaint.setAntiAlias(true);
-        mNormalPaint.setTextSize(mTextSize);
-        mNormalPaint.setColor(Color.BLACK);
-        mNormalPaint.setStyle(Paint.Style.FILL);
-        mNormalPaint.setTextAlign(Paint.Align.CENTER);
-
 
         mFirstFramePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mFirstFramePaint.setTextSize(mTextSize);
@@ -133,46 +130,19 @@ public class YummyTextSwitcher extends View {
         testPaint.setStyle(Paint.Style.FILL);
         testPaint.setColor(Color.WHITE);
 
-        Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
-
-        mFrameOffset = fmi.bottom - fmi.top;
-
-    }
-    
-    /*@Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-
-        if (widthMode == MeasureSpec.AT_MOST) {
-
-            if (heightMode == MeasureSpec.AT_MOST) {
-                setMeasuredDimension(staticLayout.getWidth(), staticLayout.getHeight());
-            } else if (heightMode == MeasureSpec.EXACTLY) {
-                setMeasuredDimension(staticLayout.getWidth(), Math.max(heightSize, staticLayout.getHeight()));
-            }
-
-        } else if (widthMode == MeasureSpec.EXACTLY) {
-            if (heightMode == MeasureSpec.AT_MOST) {
-                setMeasuredDimension(Math.max(widthSize, staticLayout.getWidth()), staticLayout.getHeight());
-            } else if (heightMode == MeasureSpec.EXACTLY) {
-                setMeasuredDimension(Math.max(widthSize, staticLayout.getWidth()), Math.max(heightSize, staticLayout.getHeight()));
-            }
-        } else {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        
+        if (mFrameOffset <=0){
+            Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
+            mFrameOffset = fmi.bottom - fmi.top; 
         }
-    }*/
+        
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
         mViewHeight = getMeasuredHeight();
         mViewWidth = getMeasuredWidth();
-        mTextSize = Math.min(mViewWidth, mViewHeight) / 4.0f;
     }
 
     @Override
@@ -190,15 +160,15 @@ public class YummyTextSwitcher extends View {
         float baseline = (float) (y - (fmi.bottom / 2.0 + fmi.top / 2.0));
 
 
-        mTextPaint.setMaskFilter(null);
+       /* mTextPaint.setMaskFilter(null);
 
         drawRect.left = 0;
         drawRect.top = (getHeight() - getWidth()) / 2;
         drawRect.right = getWidth();
         drawRect.bottom = drawRect.top + getWidth();
-        canvas.drawRect(drawRect, testPaint);
-        
-        
+        canvas.drawRect(drawRect, testPaint);*/
+
+
         canvas.drawText(mFrameInterpolator.getStartFrame(0), x, baseline + scrollY, mTextPaint);
         canvas.drawText(mFrameInterpolator.getStartFrame(1), x, baseline + mFrameOffset + scrollY, mFirstFramePaint);
         canvas.drawText(mFrameInterpolator.getStartFrame(2), x, baseline + mFrameOffset * 2 + scrollY, mSecondFramePaint);
@@ -213,14 +183,14 @@ public class YummyTextSwitcher extends View {
         canvas.drawText(mFrameInterpolator.getEndFrame(2), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 5) + scrollY, mTextPaint);
 
     }
-    
+
     public void startAnim() {
-        
-        ObjectAnimator anim2 = ObjectAnimator.ofFloat(this, "scrollY", 0, - mFrameOffset * 8);
+
+        ObjectAnimator anim2 = ObjectAnimator.ofFloat(this, "scrollY", 0, -mFrameOffset * 8);
         anim2.setInterpolator(new AccelerateInterpolator(5));
         anim2.setDuration(500);
 
-        ObjectAnimator anim3 = ObjectAnimator.ofFloat(this, "scrollY", - mFrameOffset * 8, -mFrameOffset * (FRAME_NUMBER_MIDDLE + FRAME_NUMBER_START + FRAME_NUMBER_END - 1));
+        ObjectAnimator anim3 = ObjectAnimator.ofFloat(this, "scrollY", -mFrameOffset * 8, -mFrameOffset * (FRAME_NUMBER_MIDDLE + FRAME_NUMBER_START + FRAME_NUMBER_END - 1));
         anim3.setInterpolator(new OvershootInterpolator(0.45f));
         anim3.setDuration(1000);
 
@@ -235,63 +205,27 @@ public class YummyTextSwitcher extends View {
         this.scrollY = scrollY;
         invalidate();
     }
-    
+
 
     private void printLog(String log) {
         Log.e(TAG, String.format("---->  %s", log));
     }
 
-    public interface FrameInterpolator {
 
-        String getStartFrame(int input);
-
-        String getMiddleFrame(float input);
-
-        String getEndFrame(int input);
-    }
-    
-
-    public class DefaultFrameInterpolator implements FrameInterpolator {
-
-
-        public DefaultFrameInterpolator() {
-
-        }
-
-        @Override
-        public String getStartFrame(int input) {
-            if (input == 0) {
-                return "1";
-            } else if (input == 1) {
-                return "2";
-            } else {
-                return "3";
-            }
-        }
-
-        @Override
-        public String getMiddleFrame(float input) {
-
-            if (input <= 0.4f) {
-                return "88";
-            } else if (input <= 0.6f) {
-                return "888";
-            } else {
-                return "8888";
-            }
-        }
-
-        @Override
-        public String getEndFrame(int input) {
-            if (input == 0) {
-                return "2334";
-            } else if (input == 1) {
-                return "2335";
-            } else {
-                return "2336";
-            }
-        }
+    public void setFrameOffset(float mFrameOffset) {
+        this.mFrameOffset = mFrameOffset;
     }
 
+    public void setTextSize(float size) {
+        if (size != mTextPaint.getTextSize()) {
+            mTextPaint.setTextSize(size);
 
+            mFirstFramePaint.setTextSize(size);
+            mSecondFramePaint.setTextSize(size);
+            mMiddleFramePaint.setTextSize(size);
+
+            requestLayout();
+            invalidate();
+        }
+    }
 }
