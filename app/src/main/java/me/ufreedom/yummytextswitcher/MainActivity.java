@@ -1,5 +1,6 @@
 package me.ufreedom.yummytextswitcher;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -20,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);*/
         
        yummyTextSwitcher= (YummyTextSwitcher) findViewById(R.id.yummyTextSwitcher);
-
+        yummyTextSwitcher.setTypeface(Typeface.createFromAsset(getAssets(), "HelveticaNeueLTPro.otf"));
 
     }
 

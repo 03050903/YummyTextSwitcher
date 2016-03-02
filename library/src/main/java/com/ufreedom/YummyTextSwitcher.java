@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -30,10 +31,9 @@ public class YummyTextSwitcher extends View {
     private static final String TAG = "YummyTextSwitcher";
     private float mTextSize;
     private Paint mTextPaint;
+    private int mTextColor;
     private FrameInterpolator mFrameInterpolator;
 
-    private int mViewHeight;
-    private int mViewWidth;
 
     private BlurMaskFilter mMaskFilterFirst;
     private BlurMaskFilter mMaskFilterSecond;
@@ -62,8 +62,8 @@ public class YummyTextSwitcher extends View {
 
         TypedArray arr = context.obtainStyledAttributes(attrs, R.styleable.YummyTextSwitcher, 0, 0);
         mTextSize = arr.getDimensionPixelSize(R.styleable.YummyTextSwitcher_textSize, 80);
-        
-        if (arr.hasValue(R.styleable.YummyTextSwitcher_frameOffset)){
+        mTextColor = arr.getColor(R.styleable.YummyTextSwitcher_textColor, Color.BLACK);
+        if (arr.hasValue(R.styleable.YummyTextSwitcher_frameOffset)) {
             mFrameOffset = arr.getFloat(R.styleable.YummyTextSwitcher_frameOffset, -1.0f);
         }
         arr.recycle();
@@ -83,11 +83,10 @@ public class YummyTextSwitcher extends View {
         mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mFrameInterpolator = new NumberFrameInterpolator();
 
-        //      mTextSize = 80;
         mTextPaint.setTextSize(mTextSize);
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(mTextSize);
-        mTextPaint.setColor(Color.BLACK);
+        mTextPaint.setColor(mTextColor);
         mTextPaint.setStyle(Paint.Style.FILL);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
 
@@ -95,7 +94,7 @@ public class YummyTextSwitcher extends View {
         mFirstFramePaint.setTextSize(mTextSize);
         mFirstFramePaint.setAntiAlias(true);
         mFirstFramePaint.setTextSize(mTextSize);
-        mFirstFramePaint.setColor(Color.BLACK);
+        mFirstFramePaint.setColor(mTextColor);
         mFirstFramePaint.setStyle(Paint.Style.FILL);
         mFirstFramePaint.setTextAlign(Paint.Align.CENTER);
 
@@ -103,7 +102,7 @@ public class YummyTextSwitcher extends View {
         mSecondFramePaint.setTextSize(mTextSize);
         mSecondFramePaint.setAntiAlias(true);
         mSecondFramePaint.setTextSize(mTextSize);
-        mSecondFramePaint.setColor(Color.BLACK);
+        mSecondFramePaint.setColor(mTextColor);
         mSecondFramePaint.setStyle(Paint.Style.FILL);
         mSecondFramePaint.setTextAlign(Paint.Align.CENTER);
 
@@ -111,38 +110,88 @@ public class YummyTextSwitcher extends View {
         mMiddleFramePaint.setTextSize(mTextSize);
         mMiddleFramePaint.setAntiAlias(true);
         mMiddleFramePaint.setTextSize(mTextSize);
-        mMiddleFramePaint.setColor(Color.BLACK);
+        mMiddleFramePaint.setColor(mTextColor);
         mMiddleFramePaint.setStyle(Paint.Style.FILL);
         mMiddleFramePaint.setTextAlign(Paint.Align.CENTER);
-
-
+        
         mMaskFilterFirst = new BlurMaskFilter(3, BlurMaskFilter.Blur.NORMAL);
         mMaskFilterSecond = new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL);
         mMaskFilterMiddle = new BlurMaskFilter(25, BlurMaskFilter.Blur.NORMAL);
-
-
+        
         mFirstFramePaint.setMaskFilter(mMaskFilterFirst);
         mSecondFramePaint.setMaskFilter(mMaskFilterSecond);
         mMiddleFramePaint.setMaskFilter(mMaskFilterMiddle);
-
-
+        
         testPaint = new Paint();
         testPaint.setStyle(Paint.Style.FILL);
         testPaint.setColor(Color.WHITE);
-
         
-        if (mFrameOffset <=0){
+        if (mFrameOffset <= 0) {
             Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
-            mFrameOffset = fmi.bottom - fmi.top; 
+            mFrameOffset = fmi.bottom - fmi.top;
         }
-        
+
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mViewHeight = getMeasuredHeight();
-        mViewWidth = getMeasuredWidth();
+
+        if (mFrameInterpolator == null){
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            return;
+        }
+
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+
+        int widthPaddingOffset =   getPaddingLeft() + getPaddingRight();
+        if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.AT_MOST) {
+            float maxWidth = getDesireWidth(mTextPaint, mFrameInterpolator);
+            Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
+            setMeasuredDimension((int) maxWidth + widthPaddingOffset, fmi.bottom - fmi.top);
+        } else if (widthMode == MeasureSpec.AT_MOST) {
+            float maxWidth = getDesireWidth(mTextPaint, mFrameInterpolator);
+            setMeasuredDimension((int) maxWidth + widthPaddingOffset, heightSize);
+        } else if (heightMode == MeasureSpec.AT_MOST) {
+            Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
+            setMeasuredDimension(widthSize + widthPaddingOffset, fmi.bottom - fmi.top);
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+
+    }
+
+    private static float getDesireWidth(Paint mTextPaint, FrameInterpolator mFrameInterpolator) {
+        float maxWidth = 0;
+
+        for (int i = 0; i < FRAME_NUMBER_START; i++) {
+            float width = mTextPaint.measureText(mFrameInterpolator.getStartFrame(i));
+            if (width > maxWidth) {
+                maxWidth = width;
+            }
+        }
+
+        for (int i = 0; i < FRAME_NUMBER_END; i++) {
+            float width = mTextPaint.measureText(mFrameInterpolator.getEndFrame(i));
+            if (width > maxWidth) {
+                maxWidth = width;
+            }
+        }
+
+        for (int i = 0; i < FRAME_NUMBER_MIDDLE; i++) {
+            float width = mTextPaint.measureText(mFrameInterpolator.getMiddleFrame(i * 1.0f / FRAME_NUMBER_MIDDLE));
+            if (width > maxWidth) {
+                maxWidth = width;
+            }
+        }
+        return maxWidth;
+    }
+
+    public void setFrameInterpolator(FrameInterpolator mFrameInterpolator) {
+        this.mFrameInterpolator = mFrameInterpolator;
+        
     }
 
     @Override
@@ -154,8 +203,8 @@ public class YummyTextSwitcher extends View {
     private void drawInit(Canvas canvas) {
 
 
-        float x = (float) (mViewWidth / 2.0);
-        float y = (float) (mViewHeight / 2.0);
+        float x = (float) (getWidth() / 2.0);
+        float y = (float) (getHeight() / 2.0);
         Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
         float baseline = (float) (y - (fmi.bottom / 2.0 + fmi.top / 2.0));
 
@@ -167,10 +216,11 @@ public class YummyTextSwitcher extends View {
         drawRect.right = getWidth();
         drawRect.bottom = drawRect.top + getWidth();
         canvas.drawRect(drawRect, testPaint);*/
-
-
+        
+        
+        
         canvas.drawText(mFrameInterpolator.getStartFrame(0), x, baseline + scrollY, mTextPaint);
-        canvas.drawText(mFrameInterpolator.getStartFrame(1), x, baseline + mFrameOffset + scrollY, mFirstFramePaint);
+        canvas.drawText(mFrameInterpolator.getStartFrame(1), x, baseline +  mFrameOffset + scrollY, mFirstFramePaint);
         canvas.drawText(mFrameInterpolator.getStartFrame(2), x, baseline + mFrameOffset * 2 + scrollY, mSecondFramePaint);
 
 
@@ -216,6 +266,7 @@ public class YummyTextSwitcher extends View {
         this.mFrameOffset = mFrameOffset;
     }
 
+    
     public void setTextSize(float size) {
         if (size != mTextPaint.getTextSize()) {
             mTextPaint.setTextSize(size);
@@ -228,4 +279,30 @@ public class YummyTextSwitcher extends View {
             invalidate();
         }
     }
+
+    public void setTypeface(Typeface tf) {
+        if (mTextPaint.getTypeface() != tf) {
+            mTextPaint.setTypeface(tf);
+
+            mFirstFramePaint.setTypeface(tf);
+            mSecondFramePaint.setTypeface(tf);
+            mMiddleFramePaint.setTypeface(tf);
+            
+            requestLayout();
+            invalidate();
+        }
+    }
+
+    public void setTextColor(int color) {
+        if (mTextPaint.getColor() != color) {
+            mTextPaint.setColor(color);
+
+            mFirstFramePaint.setColor(color);
+            mSecondFramePaint.setColor(color);
+            mMiddleFramePaint.setColor(color);
+
+            invalidate();
+        }
+    }
+    
 }
