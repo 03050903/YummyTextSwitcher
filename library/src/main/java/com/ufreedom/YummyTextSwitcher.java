@@ -32,7 +32,7 @@ public class YummyTextSwitcher extends View {
     private float mTextSize;
     private Paint mTextPaint;
     private int mTextColor;
-    private FrameInterpolator mFrameInterpolator;
+    private FrameEvaluator mFrameEvaluator;
 
 
     private BlurMaskFilter mMaskFilterFirst;
@@ -81,7 +81,6 @@ public class YummyTextSwitcher extends View {
 
 
         mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mFrameInterpolator = new NumberFrameInterpolator();
 
         mTextPaint.setTextSize(mTextSize);
         mTextPaint.setAntiAlias(true);
@@ -136,7 +135,7 @@ public class YummyTextSwitcher extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
-        if (mFrameInterpolator == null){
+        if (mFrameEvaluator == null){
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             return;
         }
@@ -148,11 +147,11 @@ public class YummyTextSwitcher extends View {
 
         int widthPaddingOffset =   getPaddingLeft() + getPaddingRight();
         if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.AT_MOST) {
-            float maxWidth = getDesireWidth(mTextPaint, mFrameInterpolator);
+            float maxWidth = getDesireWidth(mTextPaint, mFrameEvaluator);
             Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
             setMeasuredDimension((int) maxWidth + widthPaddingOffset, fmi.bottom - fmi.top);
         } else if (widthMode == MeasureSpec.AT_MOST) {
-            float maxWidth = getDesireWidth(mTextPaint, mFrameInterpolator);
+            float maxWidth = getDesireWidth(mTextPaint, mFrameEvaluator);
             setMeasuredDimension((int) maxWidth + widthPaddingOffset, heightSize);
         } else if (heightMode == MeasureSpec.AT_MOST) {
             Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
@@ -163,25 +162,25 @@ public class YummyTextSwitcher extends View {
 
     }
 
-    private static float getDesireWidth(Paint mTextPaint, FrameInterpolator mFrameInterpolator) {
+    private static float getDesireWidth(Paint mTextPaint, FrameEvaluator mFrameEvaluator) {
         float maxWidth = 0;
 
         for (int i = 0; i < FRAME_NUMBER_START; i++) {
-            float width = mTextPaint.measureText(mFrameInterpolator.getStartFrame(i));
+            float width = mTextPaint.measureText(mFrameEvaluator.getStartFrame(i));
             if (width > maxWidth) {
                 maxWidth = width;
             }
         }
 
         for (int i = 0; i < FRAME_NUMBER_END; i++) {
-            float width = mTextPaint.measureText(mFrameInterpolator.getEndFrame(i));
+            float width = mTextPaint.measureText(mFrameEvaluator.getEndFrame(i));
             if (width > maxWidth) {
                 maxWidth = width;
             }
         }
 
         for (int i = 0; i < FRAME_NUMBER_MIDDLE; i++) {
-            float width = mTextPaint.measureText(mFrameInterpolator.getMiddleFrame(i * 1.0f / FRAME_NUMBER_MIDDLE));
+            float width = mTextPaint.measureText(mFrameEvaluator.getMiddleFrame(i * 1.0f / FRAME_NUMBER_MIDDLE));
             if (width > maxWidth) {
                 maxWidth = width;
             }
@@ -189,10 +188,7 @@ public class YummyTextSwitcher extends View {
         return maxWidth;
     }
 
-    public void setFrameInterpolator(FrameInterpolator mFrameInterpolator) {
-        this.mFrameInterpolator = mFrameInterpolator;
-        
-    }
+    
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -219,18 +215,18 @@ public class YummyTextSwitcher extends View {
         
         
         
-        canvas.drawText(mFrameInterpolator.getStartFrame(0), x, baseline + scrollY, mTextPaint);
-        canvas.drawText(mFrameInterpolator.getStartFrame(1), x, baseline +  mFrameOffset + scrollY, mFirstFramePaint);
-        canvas.drawText(mFrameInterpolator.getStartFrame(2), x, baseline + mFrameOffset * 2 + scrollY, mSecondFramePaint);
+        canvas.drawText(mFrameEvaluator.getStartFrame(0), x, baseline + scrollY, mTextPaint);
+        canvas.drawText(mFrameEvaluator.getStartFrame(1), x, baseline +  mFrameOffset + scrollY, mFirstFramePaint);
+        canvas.drawText(mFrameEvaluator.getStartFrame(2), x, baseline + mFrameOffset * 2 + scrollY, mSecondFramePaint);
 
 
         for (int i = 0; i < FRAME_NUMBER_MIDDLE; i++) {
-            canvas.drawText(mFrameInterpolator.getMiddleFrame(i * 1.0f / FRAME_NUMBER_MIDDLE), x, baseline + mFrameOffset * (3 + i) + scrollY, mMiddleFramePaint);
+            canvas.drawText(mFrameEvaluator.getMiddleFrame(i * 1.0f / FRAME_NUMBER_MIDDLE), x, baseline + mFrameOffset * (3 + i) + scrollY, mMiddleFramePaint);
         }
 
-        canvas.drawText(mFrameInterpolator.getEndFrame(0), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 3) + scrollY, mSecondFramePaint);
-        canvas.drawText(mFrameInterpolator.getEndFrame(1), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 4) + scrollY, mFirstFramePaint);
-        canvas.drawText(mFrameInterpolator.getEndFrame(2), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 5) + scrollY, mTextPaint);
+        canvas.drawText(mFrameEvaluator.getEndFrame(0), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 3) + scrollY, mSecondFramePaint);
+        canvas.drawText(mFrameEvaluator.getEndFrame(1), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 4) + scrollY, mFirstFramePaint);
+        canvas.drawText(mFrameEvaluator.getEndFrame(2), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 5) + scrollY, mTextPaint);
 
     }
 
@@ -303,6 +299,12 @@ public class YummyTextSwitcher extends View {
 
             invalidate();
         }
+    }
+
+    public void setFrameInterpolator(FrameEvaluator mFrameEvaluator) {
+        this.mFrameEvaluator = mFrameEvaluator;
+        requestLayout();
+        invalidate();
     }
     
 }

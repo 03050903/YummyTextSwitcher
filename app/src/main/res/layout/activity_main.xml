@@ -7,7 +7,15 @@
     android:fitsSystemWindows="true"
     tools:context="me.ufreedom.yummytextswitcher.MainActivity">
 
-
+    <android.support.v7.widget.Toolbar
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    
+    
     <com.ufreedom.YummyTextSwitcher
         android:id="@+id/yummyTextSwitcher"
         android:layout_width="wrap_content"
@@ -25,7 +33,15 @@
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:onClick="startAnim"/>
-    
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="对话框"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="40dp"
+        android:onClick="showDialog"/>
     
 
 </RelativeLayout>

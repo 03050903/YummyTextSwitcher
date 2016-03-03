@@ -3,10 +3,12 @@ package me.ufreedom.yummytextswitcher;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.ufreedom.NumberFrameEvaluator;
 import com.ufreedom.YummyTextSwitcher;
 
 public class MainActivity extends AppCompatActivity {
@@ -17,16 +19,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-     /*   Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);*/
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         
-       yummyTextSwitcher= (YummyTextSwitcher) findViewById(R.id.yummyTextSwitcher);
+        yummyTextSwitcher= (YummyTextSwitcher) findViewById(R.id.yummyTextSwitcher);
         yummyTextSwitcher.setTypeface(Typeface.createFromAsset(getAssets(), "HelveticaNeueLTPro.otf"));
-
+        yummyTextSwitcher.setFrameInterpolator(new NumberFrameEvaluator(1,3023));
     }
 
     public void startAnim(View view ){
         yummyTextSwitcher.startAnim();
+    }
+
+    public void showDialog(View view ){
+        NumberAnimDialog.showDialog(this);
     }
     
     @Override

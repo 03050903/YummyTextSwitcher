@@ -4,21 +4,27 @@ package com.ufreedom;
  * Author SunMeng
  * Date : 2016 三月 02
  */
-public class NumberFrameInterpolator implements FrameInterpolator {
+public class NumberFrameEvaluator implements FrameEvaluator {
 
+    private int mStart;
+    private int mEnd;
+    private String[] middles;
 
-    public NumberFrameInterpolator() {
-
+    public NumberFrameEvaluator(int start, int end) {
+        this.mStart = start;
+        this.mEnd = end;
+        middles = new String[2];
+        
     }
-
+    
     @Override
     public String getStartFrame(int input) {
         if (input == 0) {
-            return "1";
+            return "" + mStart;
         } else if (input == 1) {
-            return "2";
+            return "" + (mStart + 1);
         } else {
-            return "3";
+            return "" + (mStart + 2);
         }
     }
 
@@ -36,12 +42,13 @@ public class NumberFrameInterpolator implements FrameInterpolator {
 
     @Override
     public String getEndFrame(int input) {
+
         if (input == 0) {
-            return "2334";
+            return "" + (mEnd - 2);
         } else if (input == 1) {
-            return "2335";
+            return "" + (mEnd - 1);
         } else {
-            return "2336";
+            return "" + mEnd;
         }
     }
 }
