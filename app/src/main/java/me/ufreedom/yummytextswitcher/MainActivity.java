@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
         
         yummyTextSwitcher= (YummyTextSwitcher) findViewById(R.id.yummyTextSwitcher);
         yummyTextSwitcher.setTypeface(Typeface.createFromAsset(getAssets(), "HelveticaNeueLTPro.otf"));
+
         yummyTextSwitcher.setFrameInterpolator(new NumberFrameEvaluator(1,3023));
     }
 

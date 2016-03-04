@@ -1,5 +1,7 @@
 package me.ufreedom.yummytextswitcher;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.graphics.Color;
@@ -13,9 +15,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
+import com.facebook.rebound.SimpleSpringListener;
 import com.facebook.rebound.Spring;
 import com.facebook.rebound.SpringConfig;
-import com.facebook.rebound.SpringListener;
 import com.facebook.rebound.SpringSystem;
 import com.facebook.rebound.SpringUtil;
 
@@ -33,16 +35,7 @@ import com.facebook.rebound.SpringUtil;
  * 2.设置当用户触发对话框窗口边界外区域时，是否销毁对话框。请使用{@link #setCanceledOnTouchOutside(boolean)}}
  * 
  */
-public abstract class ReboundAnimDialogFragment extends DialogFragment implements SpringListener, ViewTreeObserver.OnGlobalLayoutListener {
-
-    private static final int mStartY = 300;
-    public static final SpringConfig ORIGAMI_SPRING_CONFIG = SpringConfig
-            .fromOrigamiTensionAndFriction(70, 6.5f);
-    
-
-    private Spring animSpring =  SpringSystem.create().createSpring()
-            .setSpringConfig(ORIGAMI_SPRING_CONFIG)
-            .addListener(this);
+public abstract class ReboundAnimDialogFragment extends DialogFragment  {
 
     protected View dialogView;
     private View rootView;
@@ -50,14 +43,55 @@ public abstract class ReboundAnimDialogFragment extends DialogFragment implement
     private boolean mCanceledOnTouchOutside = true;
     private boolean mAnimEnable = true;
     private Handler mHandler;
-
+    private float mTranslateY;
+    private SpringSystem mSpringSystem;
+    private Spring mScaleAnimation;
+    private Spring mTranslateAnimationSpring;
+    private ValueAnimator mAlphaAnimation;
+    
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(R.style.DialogTheme, android.support.v4.app.DialogFragment.STYLE_NO_TITLE);
         mHandler = new Handler();
+        configReboundAnim();
+        
     }
+
+    protected void configReboundAnim(){
+        mSpringSystem = SpringSystem.create();
+        mScaleAnimation = mSpringSystem.createSpring()
+                .setSpringConfig(SpringConfig.fromBouncinessAndSpeed(12, 12))
+                .addListener(new SimpleSpringListener() {
+                    @Override
+                    public void onSpringUpdate(Spring spring) {
+                        setScaleProgress((float) spring.getCurrentValue());
+                    }
+                });
+
+        mTranslateAnimationSpring = mSpringSystem.createSpring()
+                .setSpringConfig(SpringConfig.fromBouncinessAndSpeed(12, 16))
+                .addListener(new SimpleSpringListener() {
+                    
+                    @Override
+                    public void onSpringUpdate(Spring spring) {
+                        setTranslateYProgress((float) spring.getCurrentValue());
+                    }
+                     }
+                );
+        
+        mAlphaAnimation = ObjectAnimator.ofFloat(0.0f,1.0f);
+        mAlphaAnimation.setDuration(100);
+        mAlphaAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                dialogView.setAlpha((Float) animation.getAnimatedValue());
+                rootView.setAlpha((Float) animation.getAnimatedValue());
+            }
+        });
+    }
+    
 
     @Nullable
     @Override
@@ -66,15 +100,21 @@ public abstract class ReboundAnimDialogFragment extends DialogFragment implement
         view.setBackgroundColor(getWindowBackgroundColor());
         rootView = view.findViewById(R.id.rootView);
         dialogView = LayoutInflater.from(getActivity()).inflate(getDialogLayoutResId(), (ViewGroup) view,false);
-
-        ViewTreeObserver vto2 = dialogView.getViewTreeObserver();
-        vto2.addOnGlobalLayoutListener(this);
-
+        
         ((ViewGroup) view).addView(dialogView);
+        dialogView.setAlpha(0f);
+        rootView.setAlpha(0f);
         onFindView(dialogView);
+        dialogView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                dialogView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                mTranslateY = (rootView.getMeasuredHeight() - dialogView.getMeasuredHeight()) / 2 + dialogView.getMeasuredHeight(); 
+            }
+        });
+        
 
         onConfigDialog(getDialog());
-        
         if (mCanceledOnTouchOutside){
             rootView.setOnTouchListener(new RootViewTouchListener());
             dialogView.setOnTouchListener(new DialogTouchListener());
@@ -124,19 +164,6 @@ public abstract class ReboundAnimDialogFragment extends DialogFragment implement
         mAnimEnable = enable;
     }
 
-    @Override
-    public void onSpringUpdate(Spring spring) {
-        float value = (float) spring.getCurrentValue();
-
-        float selectedTitleScale = (float) SpringUtil.mapValueFromRangeToRange(
-                value, 0, 1, 0, 1);
-      /*  float titleTranslateY = (float) SpringUtil.mapValueFromRangeToRange(
-                value, 0, 1, mStartDP, 0);*/
-        dialogView.setScaleX(selectedTitleScale);
-        dialogView.setScaleY(selectedTitleScale);
-    }
-
-
 
     @Override
     public void onStart() {
@@ -145,25 +172,32 @@ public abstract class ReboundAnimDialogFragment extends DialogFragment implement
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (animSpring.getEndValue() == 1){
-                        animSpring.setAtRest();
-                    }else {
-                        animSpring.setVelocity(8);
-                        animSpring.setEndValue(1);   
-                    }
+                    mAlphaAnimation.start();
+                    mTranslateAnimationSpring.setEndValue(1f);
+                    mScaleAnimation.setEndValue(1f);
                 }
             },100);
-           
+         
         }
-        
-        
+    }
+    
+    
 
+    private void setScaleProgress(float progress) {
+        float transition = transition(progress, 0f, 1f);
+        dialogView.setScaleX(transition);
+        dialogView.setScaleY(transition);
     }
 
-    @Override
-    public void onGlobalLayout() {
-
+    private void setTranslateYProgress(float progress) {
+        float transition = transition(progress, -mTranslateY,0);
+        dialogView.setTranslationY(transition);
     }
+
+    private float transition(float progress, float startValue, float endValue) {
+        return (float) SpringUtil.mapValueFromRangeToRange(progress, 0, 1, startValue, endValue);
+    }
+    
 
 
     class RootViewTouchListener implements View.OnTouchListener{
@@ -191,22 +225,6 @@ public abstract class ReboundAnimDialogFragment extends DialogFragment implement
     }
     
     
-
-    @Override
-    public void onSpringAtRest(Spring spring) {
-
-    }
-
-    @Override
-    public void onSpringActivate(Spring spring) {
-
-    }
-
-    @Override
-    public void onSpringEndStateChange(Spring spring) {
-
-    }
-
 
     public int getWindowBackgroundColor() {
         return Color.parseColor("#CC000000");

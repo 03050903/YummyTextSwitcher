@@ -18,15 +18,16 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 /**
- * Author SunMeng
- * Date : 2016 三月 01
+ * Author UFreedom
+ * 
  */
 public class YummyTextSwitcher extends View {
 
-    public static final int FRAME_NUMBER_MIDDLE = 30;
-    public static final int FRAME_NUMBER_START = 3;
-    public static final int FRAME_NUMBER_END = 3;
+    private static final int FRAME_NUMBER_MIDDLE = 30;
+    private static final int FRAME_NUMBER_START = 3;
+    private static final int FRAME_NUMBER_END = 3;
 
+    private static final int DURATION_MIDDLE_FRAME = 800;
 
     private static final String TAG = "YummyTextSwitcher";
     private float mTextSize;
@@ -115,7 +116,7 @@ public class YummyTextSwitcher extends View {
         
         mMaskFilterFirst = new BlurMaskFilter(3, BlurMaskFilter.Blur.NORMAL);
         mMaskFilterSecond = new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL);
-        mMaskFilterMiddle = new BlurMaskFilter(25, BlurMaskFilter.Blur.NORMAL);
+        mMaskFilterMiddle = new BlurMaskFilter(18, BlurMaskFilter.Blur.NORMAL);
         
         mFirstFramePaint.setMaskFilter(mMaskFilterFirst);
         mSecondFramePaint.setMaskFilter(mMaskFilterSecond);
@@ -204,26 +205,18 @@ public class YummyTextSwitcher extends View {
         Paint.FontMetricsInt fmi = mTextPaint.getFontMetricsInt();
         float baseline = (float) (y - (fmi.bottom / 2.0 + fmi.top / 2.0));
 
-
-       /* mTextPaint.setMaskFilter(null);
-
-        drawRect.left = 0;
-        drawRect.top = (getHeight() - getWidth()) / 2;
-        drawRect.right = getWidth();
-        drawRect.bottom = drawRect.top + getWidth();
-        canvas.drawRect(drawRect, testPaint);*/
-        
-        
-        
+        //draw the three start frame
         canvas.drawText(mFrameEvaluator.getStartFrame(0), x, baseline + scrollY, mTextPaint);
         canvas.drawText(mFrameEvaluator.getStartFrame(1), x, baseline +  mFrameOffset + scrollY, mFirstFramePaint);
         canvas.drawText(mFrameEvaluator.getStartFrame(2), x, baseline + mFrameOffset * 2 + scrollY, mSecondFramePaint);
 
-
+        
+        //draw middle frame
         for (int i = 0; i < FRAME_NUMBER_MIDDLE; i++) {
             canvas.drawText(mFrameEvaluator.getMiddleFrame(i * 1.0f / FRAME_NUMBER_MIDDLE), x, baseline + mFrameOffset * (3 + i) + scrollY, mMiddleFramePaint);
         }
 
+        //draw the three end frame
         canvas.drawText(mFrameEvaluator.getEndFrame(0), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 3) + scrollY, mSecondFramePaint);
         canvas.drawText(mFrameEvaluator.getEndFrame(1), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 4) + scrollY, mFirstFramePaint);
         canvas.drawText(mFrameEvaluator.getEndFrame(2), x, baseline + mFrameOffset * (FRAME_NUMBER_MIDDLE + 5) + scrollY, mTextPaint);
@@ -234,11 +227,11 @@ public class YummyTextSwitcher extends View {
 
         ObjectAnimator anim2 = ObjectAnimator.ofFloat(this, "scrollY", 0, -mFrameOffset * 8);
         anim2.setInterpolator(new AccelerateInterpolator(5));
-        anim2.setDuration(500);
+        anim2.setDuration(400);
 
         ObjectAnimator anim3 = ObjectAnimator.ofFloat(this, "scrollY", -mFrameOffset * 8, -mFrameOffset * (FRAME_NUMBER_MIDDLE + FRAME_NUMBER_START + FRAME_NUMBER_END - 1));
         anim3.setInterpolator(new OvershootInterpolator(0.45f));
-        anim3.setDuration(1000);
+        anim3.setDuration(DURATION_MIDDLE_FRAME);
 
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.playSequentially(anim2, anim3);
@@ -296,10 +289,11 @@ public class YummyTextSwitcher extends View {
             mFirstFramePaint.setColor(color);
             mSecondFramePaint.setColor(color);
             mMiddleFramePaint.setColor(color);
-
             invalidate();
         }
     }
+    
+    
 
     public void setFrameInterpolator(FrameEvaluator mFrameEvaluator) {
         this.mFrameEvaluator = mFrameEvaluator;
