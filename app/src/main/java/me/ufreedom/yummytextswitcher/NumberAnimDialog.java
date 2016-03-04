@@ -7,7 +7,6 @@ import android.app.FragmentTransaction;
 import android.graphics.Typeface;
 import android.view.View;
 
-import com.ufreedom.NumberFrameEvaluator;
 import com.ufreedom.YummyTextSwitcher;
 
 /**

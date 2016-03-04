@@ -1,8 +1,8 @@
 package com.ufreedom;
 
 /**
- * Author SunMeng
- * Date : 2016 三月 02
+ * Author UFreedom
+ * 
  */
 public interface FrameEvaluator {
 

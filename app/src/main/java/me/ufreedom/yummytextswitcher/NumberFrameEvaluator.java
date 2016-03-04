@@ -1,7 +1,9 @@
-package com.ufreedom;
+package me.ufreedom.yummytextswitcher;
+
+import com.ufreedom.FrameEvaluator;
 
 /**
- * Author SunMeng
+ * Author UFreedom
  * Date : 2016 三月 02
  */
 public class NumberFrameEvaluator implements FrameEvaluator {

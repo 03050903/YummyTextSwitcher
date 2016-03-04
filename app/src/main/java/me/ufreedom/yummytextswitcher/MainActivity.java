@@ -8,7 +8,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.ufreedom.NumberFrameEvaluator;
 import com.ufreedom.YummyTextSwitcher;
 
 public class MainActivity extends AppCompatActivity {
