@@ -1,5 +1,5 @@
 # YummyTextSwitcher
-switch text width cool animation
+switch text with cool animation
 
 
 
